@@ -8,7 +8,7 @@ val chiselVersion = "3.5.6"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "sw_chisel",
+    name := "SWChisel",
     libraryDependencies ++= Seq(
       "edu.berkeley.cs" %% "chisel3" % chiselVersion,
       "edu.berkeley.cs" %% "chiseltest" % "0.5.6" % "test"
@@ -18,6 +18,7 @@ lazy val root = (project in file("."))
       "-deprecation",
       "-feature",
       "-Xcheckinit",
+      "-P:chiselplugin:genBundleElements",
     ),
     addCompilerPlugin("edu.berkeley.cs" % "chisel3-plugin" % chiselVersion cross CrossVersion.full),
   )
