@@ -11,8 +11,8 @@
 // Include common routines
 #include <verilated.h>
 
-// Include model header, generated from Verilating "SWCell.v"
-#include "VSWCell.h"
+// Include model header, generated from Verilating "SW.v"
+#include "VSW.h"
 
 // Legacy function required only so linking works on Cygwin and MSVC++
 double sc_time_stamp() { return 0; }
@@ -27,14 +27,14 @@ int main(int argc, char** argv) {
     Verilated::mkdir("logs");
 
     // Construct a VerilatedContext to hold simulation time, etc.
-    // Multiple modules (made later below with VSWCell) may share the same
+    // Multiple modules (made later below with VSW) may share the same
     // context to share time, or modules may have different contexts if
     // they should be independent from each other.
 
     // Using unique_ptr is similar to
     // "VerilatedContext* contextp = new VerilatedContext" then deleting at end.
     const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};
-    // Do not instead make VSWCell as a file-scope static variable, as the
+    // Do not instead make VSW as a file-scope static variable, as the
     // "C++ static initialization order fiasco" may cause a crash
 
     // Set debug level, 0 is off, 9 is highest presently used
@@ -52,15 +52,15 @@ int main(int argc, char** argv) {
     // This needs to be called before you create any model
     contextp->commandArgs(argc, argv);
 
-    // Construct the Verilated model, from VSWCell.h generated from Verilating "SWCell.v".
-    // Using unique_ptr is similar to "VSWCell* SWCell = new VSWCell" then deleting at end.
-    // "SWCELL" will be the hierarchical name of the module.
-    const std::unique_ptr<VSWCell> SWCell{new VSWCell{contextp.get(), "SWCELL"}};
+    // Construct the Verilated model, from VSW.h generated from Verilating "SW.v".
+    // Using unique_ptr is similar to "VSW* SW = new VSW" then deleting at end.
+    // "SW" will be the hierarchical name of the module.
+    const std::unique_ptr<VSW> SW{new VSW{contextp.get(), "SW"}};
 
-    // Set VSWCell's input signals
-	SWCell->reset = !0;
-	SWCell->clock = 0;
-	SWCell->io_in = 0;
+    // Set VSW's input signals
+	SW->reset = !0;
+	SW->clock = 0;
+	SW->io_in = 0;
 
 	for (int i = 0; i < 16; i++) {
 		
@@ -68,29 +68,29 @@ int main(int argc, char** argv) {
 		contextp->timeInc(1);
 
 		// create fast clock
-		SWCell->clock = !SWCell->clock;	
+		SW->clock = !SW->clock;	
 		
 		// set reset logic
-		if (!SWCell->clock) {
+		if (!SW->clock) {
 			if (contextp->time() > 1 && contextp->time() < 10) {
-				SWCell->reset = !1; // Assert reset
+				SW->reset = !1; // Assert reset
 			} else {
-				SWCell->reset = !0;
+				SW->reset = !0;
 			}
 			// toggle input value
-			SWCell->io_in = !SWCell->io_in;
+			SW->io_in = !SW->io_in;
 		}
 
 		// Evaluate the model
-		SWCell->eval();
+		SW->eval();
 
 		// print out the variables
 		VL_PRINTF("[%" PRId64 "] clock=%x reset=%x -> io_in=%x io_out=%x\n",
-                  contextp->time(), SWCell->clock, SWCell->reset, SWCell->io_in,
-                  SWCell->io_out);
+                  contextp->time(), SW->clock, SW->reset, SW->io_in,
+                  SW->io_out);
         
 		
-		// SWCell->io_in = !SWCell->io_in;
+		// SW->io_in = !SW->io_in;
 		
 	}	
 
@@ -110,37 +110,37 @@ int main(int argc, char** argv) {
 //        // new API, and sc_time_stamp() will no longer work.
 //
 //        // Toggle a fast (time/2 period) clock
-//        SWCell->clk = !SWCell->clk;
+//        SW->clk = !SW->clk;
 //
 //        // Toggle control signals on an edge that doesn't correspond
 //        // to where the controls are sampled; in this example we do
 //        // this only on a negedge of clk, because we know
 //        // reset is not sampled there.
-//        if (!SWCell->clk) {
+//        if (!SW->clk) {
 //            if (contextp->time() > 1 && contextp->time() < 10) {
-//                SWCell->reset_l = !1;  // Assert reset
+//                SW->reset_l = !1;  // Assert reset
 //            } else {
-//                SWCell->reset_l = !0;  // Deassert reset
+//                SW->reset_l = !0;  // Deassert reset
 //            }
 //            // Assign some other inputs
-//            // SWCell->in_quad += 0x12;
+//            // SW->in_quad += 0x12;
 //        }
 //
 //        // Evaluate model
 //        // (If you have multiple models being simulated in the same
 //        // timestep then instead of eval(), call eval_step() on each, then
 //        // eval_end_step() on each. See the manual.)
-//        SWCell->eval();
+//        SW->eval();
 //
 //        // Read outputs
 //        //VL_PRINTF("[%" PRId64 "] clk=%x rstl=%x -> oquad=%" PRIx64
 //        //          " owide=%x_%08x_%08x\n",
-//        //          contextp->time(), SWCell->clk, SWCell->reset_l, SWCell->out_quad,
-//        //          SWCell->out_wide[2], SWCell->out_wide[1], SWCell->out_wide[0]);
+//        //          contextp->time(), SW->clk, SW->reset_l, SW->out_quad,
+//        //          SW->out_wide[2], SW->out_wide[1], SW->out_wide[0]);
 //    }
 
     // Final model cleanup
-    SWCell->final();
+    SW->final();
 
     // Coverage analysis (calling write only after the test is known to pass)
 #if VM_COVERAGE

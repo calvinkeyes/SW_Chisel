@@ -11,10 +11,10 @@
 #
 #######################################################################
 
-default: VSWCell
+default: VSW
 
 # Include the rules made by Verilator
-include VSWCell.mk
+include VSW.mk
 
 # Use OBJCACHE (ccache) if using gmake and its installed
 COMPILE.cc = $(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
