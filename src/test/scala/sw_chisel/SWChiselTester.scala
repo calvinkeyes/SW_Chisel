@@ -4,89 +4,108 @@ package SWChisel
 
 import chisel3._
 import chiseltest._
+import scala.math._
+import scala.util._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "SWCell"
   it should  "print hello world" in {
-    test(new SWCell) { dut =>
+    test(new SWCell(2,3)) { dut =>
 
-    	dut.io.in.poke(true.B)
-      dut.io.out.expect(false.B)
-
-      dut.io.in.poke(false.B)
-      dut.io.out.expect(true.B)
-
-      dut.clock.step()
+      dut.io.q.poke(1.U)
 	  }
   }
 
-  // See src/test/scala/hw1/MajorityCircuitTester.scala for Problem2
+  it should "Do a simple test" in {
+    val gap = 3
+    val sub = 2
+    val s = SWModel(gap,sub)
+    test(new SWCell(gap,sub)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
+      val result = s.computeCell(1,1,3,3,3)
+      dut.io.q.poke(1.U)
+      dut.io.r.poke(1.U)
+      dut.io.top.poke(3.U)
+      dut.io.diag.poke(3.U)
+      dut.io.left.poke(3.U)
+      dut.clock.step()
+      dut.io.result.expect(result)
+      // print(result)
+    }
+  }
 
-//   behavior of "PolyEval"
-//   it should "correctly calculate out" in {
-//     val c0 = 3
-//     val c1 = 2
-//     val c2 = 1
-//     test(new PolyEval(c0, c1, c2)) { dut =>
-//       dut.io.enable.poke(true.B)
-//       dut.io.x.poke(1.U)
-//       dut.io.out.expect(6.U)
-// 
-//       dut.io.enable.poke(false.B)
-//       dut.io.out.expect(0.U)
-// 
-//       dut.io.enable.poke(true.B)
-//       dut.io.x.poke(32.U)
-//       dut.io.out.expect(1091.U)
-// 
-//     }
-//   }
-// 
-//   behavior of "ComplexALU"
-//   it should "correctly calculate realOut onlyAdd=true" in {
-//     test(new ComplexALU(onlyAdder=true)) { dut =>
-//       dut.io.doAdd.poke(true.B)
-//       dut.io.real0.poke(15.S)
-//       dut.io.real1.poke(15.S)
-//       dut.io.realOut.expect(30.S)
-// 
-//       dut.io.doAdd.poke(false.B)
-//       dut.io.real1.poke(14.S)
-//       dut.io.realOut.expect(29.S)
-//     }
-//   }
-//   it should "correctly calculate realOut onlyAdd=false" in {
-//     test(new ComplexALU(onlyAdder = false)) { dut =>
-//       dut.io.doAdd.poke(true.B)
-//       dut.io.real0.poke(15.S)
-//       dut.io.real1.poke(3.S)
-//       dut.io.realOut.expect(18.S)
-// 
-//       dut.io.doAdd.poke(false.B)
-//       dut.io.realOut.expect(12.S)
-//     }
-//   }
-//   it should "correctly calculate imagOut onlyAdd=true" in {
-//     test(new ComplexALU(onlyAdder = true)) { dut =>
-//       dut.io.doAdd.poke(true.B)
-//       dut.io.imag0.poke(13.S)
-//       dut.io.imag1.poke(4.S)
-//       dut.io.imagOut.expect(17.S)
-// 
-//       dut.io.doAdd.poke(false.B)
-//       dut.io.imagOut.expect(17.S)
-//     }
-//   }
-//   it should "correctly calculate imagOut onlyAdd=false" in {
-//     test(new ComplexALU(onlyAdder = false)) { dut =>
-//       dut.io.doAdd.poke(true.B)
-//       dut.io.imag0.poke(13.S)
-//       dut.io.imag1.poke(5.S)
-//       dut.io.imagOut.expect(18.S)
-// 
-//       dut.io.doAdd.poke(false.B)
-//       dut.io.imagOut.expect(8.S)
-//     }
-//   }
+  it should "test underflow conditions" in {
+    val gap = 3
+    val sub = 2
+    val s = SWModel(gap,sub)
+    test(new SWCell(gap,sub)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      val result = s.computeCell(2,1,0,0,0)
+      dut.io.q.poke(2.U)
+      dut.io.r.poke(1.U)
+      dut.io.top.poke(0.U)
+      dut.io.diag.poke(0.U)
+      dut.io.left.poke(0.U)
+      dut.clock.step()
+      dut.io.result.expect(result)
+      // print(result)
+    }
+  }
+
+  it should "test overflow conditions" in {
+    val gap = 3
+    val sub = 2
+    val s = SWModel(gap,sub)
+    test(new SWCell(gap,sub)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
+      val result = s.computeCell(3,3,255,255,255) 
+      dut.io.q.poke(3.U)
+      dut.io.r.poke(3.U)
+      dut.io.top.poke(255.U)
+      dut.io.diag.poke(255.U)
+      dut.io.left.poke(255.U)
+      dut.clock.step()
+      dut.io.result.expect(result)
+      // print(result)
+    }
+  }
+    
+  it should "exhaustively test SWCell (without running out of data)" in {
+      // parameters
+      val gap = 3
+      val sub = 2
+      // Models
+      val s = SWModel(gap,sub)
+      test(new SWCell(gap,sub)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+          // Test Variables
+          val top = Seq.tabulate((pow(2,5)).toInt)(n => n*8)
+          val diag = Seq.tabulate((pow(2,5)).toInt)(n => n*8)
+          val left = Seq.tabulate((pow(2,5)).toInt)(n => n*8)
+          val rand = scala.util.Random
+          for (i <- 0 until top.length) {
+            for (j <- 0 until diag.length) {
+              for (k <- 0 until left.length) {
+                val q = rand.nextInt(4)
+                val r = rand.nextInt(4)
+                // calculate model result
+                val result = s.computeCell(q,r,top(i),diag(j),left(k))
+                // poke SWCell
+                dut.io.q.poke(q.U)
+                dut.io.r.poke(r.U)
+                dut.io.top.poke(top(i).U)
+                dut.io.diag.poke(diag(j).U)
+                dut.io.left.poke(left(k).U)
+                dut.clock.step()
+                print("Test: "+i+" "+j+" "+k+" "+q+" "+r+" "+result+"\n")
+                dut.io.result.expect(result)
+                // print("Pass: "+i+" "+j+" "+k+" "+q+" "+r+"\n")
+              }
+            }
+          }
+      }
+  }
+
+  // it should "randomly test SWCell" in { }
+
+
+
+
 }
