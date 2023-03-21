@@ -4,26 +4,34 @@ package SWChisel
 import chisel3._
 import chisel3.util._
 import chisel3.stage.ChiselStage
+import scala.math._
 
-case class SWParams(val gap: Int, val sub: Int, val dataSize: Int) {
-  // don't modify parameters
-  // case class is just used as a struct to hold parameter values
+case class SWParams(val gap: Int, val sub: Int, val dataSize: Int, val fourBit: Boolean) {
+  // used to check for overflow
+  val max = pow(2,dataSize).toInt - 1
 }
 
-class SWIO extends Bundle {
+class SWIO(p: SWParams) extends Bundle {
+
+  // set bitwidth of input base pairs
   val q = Input(UInt(2.W))
   val r = Input(UInt(2.W))
+  if (p.fourBit) {
+    val q = Input(UInt(4.W))
+    val r = Input(UInt(4.W))
+  }
+  
+  // set scoring bitwidth
+  val top = Input(UInt(p.dataSize.W))
+  val diag = Input(UInt(p.dataSize.W))
+  val left = Input(UInt(p.dataSize.W))
 
-  val top = Input(UInt(8.W))
-  val diag = Input(UInt(8.W))
-  val left = Input(UInt(8.W))
-
-  val result = Output(UInt(8.W))
+  // set result bitwidth
+  val result = Output(UInt(p.dataSize.W))
 }
 
-
 class SWCell(p: SWParams) extends Module {
-  val io = IO(new SWIO)
+  val io = IO(new SWIO(p))
 
   // declare temporary value wires
   val topWire = WireInit(0.U)
@@ -48,9 +56,9 @@ class SWCell(p: SWParams) extends Module {
     leftWire := io.left - p.gap.U
   }
   // check for overflow and underflow
-  when (io.q === io.r ) {
-    when (io.diag +& p.sub.U > 255.U) {
-      diagWire := 255.U
+  when (if(p.fourBit) (io.q & io.r).asBools.reduce{_ | _} else io.q === io.r ) {
+    when (io.diag +& p.sub.U > p.max.U) {
+      diagWire := p.max.U
     } .otherwise {
       diagWire := io.diag + p.sub.U
     }
@@ -80,7 +88,7 @@ class SWCell(p: SWParams) extends Module {
 }
 
 class SW(p: SWParams) extends Module {
-  val io = IO(new SWIO)
+  val io = IO(new SWIO(p))
 
   val cell = Module(new SWCell(p))
   io <> cell.io
@@ -89,6 +97,10 @@ class SW(p: SWParams) extends Module {
 }
 
 object SWDriver extends App {
-  val p = new SWParams(2,3,8)
+  val gap = 2
+  val sub = 3
+  val dataSize = 8
+  val fourBit = false
+  val p = new SWParams(gap,sub,dataSize,fourBit)
   (new ChiselStage).emitVerilog(new SW(p), args)
 }

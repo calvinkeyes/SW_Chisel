@@ -11,7 +11,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "SWCell"
   it should  "print hello world" in {
-    val p = new SWParams(2,3,8)
+    val p = new SWParams(2,3,8,false)
     test(new SWCell(p)) { dut =>
       dut.io.q.poke(1.U)
 	  }
@@ -21,8 +21,9 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
     val gap = 2
     val sub = 3
     val dataSize = 8
-    val s = SWModel(gap,sub)
-    val p = new SWParams(gap,sub,dataSize)
+    val fourBit = false
+    val p = new SWParams(gap,sub,dataSize,fourBit)
+    val s = SWModel(p)
     test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
       val result = s.computeCell(1,1,3,3,3)
       dut.io.q.poke(1.U)
@@ -40,8 +41,9 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
     val gap = 2
     val sub = 3
     val dataSize = 8
-    val s = SWModel(gap,sub)
-    val p = new SWParams(gap,sub,dataSize)
+    val fourBit = false
+    val p = new SWParams(gap,sub,dataSize,fourBit)
+    val s = SWModel(p)
     test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       val result = s.computeCell(2,1,0,0,0)
       dut.io.q.poke(2.U)
@@ -59,8 +61,9 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
     val gap = 2
     val sub = 3
     val dataSize = 8
-    val s = SWModel(gap,sub)
-    val p = new SWParams(gap,sub,dataSize)
+    val fourBit = false
+    val p = new SWParams(gap,sub,dataSize,fourBit)
+    val s = SWModel(p)
     test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
       val result = s.computeCell(3,3,255,255,255) 
       dut.io.q.poke(3.U)
@@ -79,9 +82,10 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
       val gap = 2
       val sub = 3
       val dataSize = 8
+      val fourBit = false
       // Models
-      val p = new SWParams(gap,sub,dataSize)
-      val s = SWModel(gap,sub)
+      val p = new SWParams(gap,sub,dataSize,fourBit)
+      val s = SWModel(p)
       test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
           // Test Variables
           val top = Seq.tabulate((pow(2,5)).toInt)(n => n*8)
