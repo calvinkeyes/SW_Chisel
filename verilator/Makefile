@@ -80,13 +80,8 @@ run:
 	obj_dir/VSW +trace
 
 	@echo
-	@echo "-- COVERAGE ----------------"
-	@rm -rf logs/annotated
-	$(VERILATOR_COVERAGE) --annotate logs/annotated logs/coverage.dat
-
-	@echo
 	@echo "-- DONE --------------------"
-	@echo "To see waveforms, open vlt_dump.vcd in a waveform viewer"
+	@echo "To see waveforms, open logs/dump.vcd in a waveform viewer"
 	@echo
 
 

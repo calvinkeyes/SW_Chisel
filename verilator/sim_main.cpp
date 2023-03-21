@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     SW->io_diag = 0;
     SW->io_left = 0;
 
-	for (int i = 0; i < 16; i++) {
+	for (int i = 0; i < 8; i++) {
 		
 		// increment time signal
 		contextp->timeInc(1);
