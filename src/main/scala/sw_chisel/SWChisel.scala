@@ -5,6 +5,11 @@ import chisel3._
 import chisel3.util._
 import chisel3.stage.ChiselStage
 
+case class SWParams(val gap: Int, val sub: Int, val dataSize: Int) {
+  // don't modify parameters
+  // case class is just used as a struct to hold parameter values
+}
+
 class SWIO extends Bundle {
   val q = Input(UInt(2.W))
   val r = Input(UInt(2.W))
@@ -17,7 +22,7 @@ class SWIO extends Bundle {
 }
 
 
-class SWCell(gap: Int, sub: Int) extends Module {
+class SWCell(p: SWParams) extends Module {
   val io = IO(new SWIO)
 
   // declare temporary value wires
@@ -31,29 +36,29 @@ class SWCell(gap: Int, sub: Int) extends Module {
   io.result := result
 
   // check for underflow
-  when (gap.U >= io.top) {
+  when (p.gap.U >= io.top) {
     topWire := 0.U
   } .otherwise {
-    topWire := io.top - gap.U
+    topWire := io.top - p.gap.U
   }
   // check for underflow
-  when (gap.U >= io.left) {
+  when (p.gap.U >= io.left) {
     leftWire := 0.U
   } .otherwise {
-    leftWire := io.left - gap.U
+    leftWire := io.left - p.gap.U
   }
   // check for overflow and underflow
   when (io.q === io.r ) {
-    when (io.diag +& sub.U > 255.U) {
+    when (io.diag +& p.sub.U > 255.U) {
       diagWire := 255.U
     } .otherwise {
-      diagWire := io.diag + sub.U
+      diagWire := io.diag + p.sub.U
     }
   } .otherwise {
-    when (sub.U >= io.diag) {
+    when (p.sub.U >= io.diag) {
       diagWire := 0.U
     } .otherwise {
-      diagWire := io.diag - sub.U
+      diagWire := io.diag - p.sub.U
     }
   }
 
@@ -74,15 +79,16 @@ class SWCell(gap: Int, sub: Int) extends Module {
 
 }
 
-class SW(gap: Int, sub: Int) extends Module {
+class SW(p: SWParams) extends Module {
   val io = IO(new SWIO)
 
-  val cell = Module(new SWCell(gap,sub))
+  val cell = Module(new SWCell(p))
   io <> cell.io
 
   printf("In SW\n")
 }
 
 object SWDriver extends App {
-  (new ChiselStage).emitVerilog(new SW(2,3), args)
+  val p = new SWParams(2,3,8)
+  (new ChiselStage).emitVerilog(new SW(p), args)
 }

@@ -11,17 +11,19 @@ import org.scalatest.flatspec.AnyFlatSpec
 class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "SWCell"
   it should  "print hello world" in {
-    test(new SWCell(2,3)) { dut =>
-
+    val p = new SWParams(2,3,8)
+    test(new SWCell(p)) { dut =>
       dut.io.q.poke(1.U)
 	  }
   }
 
   it should "Do a simple test" in {
-    val gap = 3
-    val sub = 2
+    val gap = 2
+    val sub = 3
+    val dataSize = 8
     val s = SWModel(gap,sub)
-    test(new SWCell(gap,sub)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
+    val p = new SWParams(gap,sub,dataSize)
+    test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
       val result = s.computeCell(1,1,3,3,3)
       dut.io.q.poke(1.U)
       dut.io.r.poke(1.U)
@@ -35,10 +37,12 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "test underflow conditions" in {
-    val gap = 3
-    val sub = 2
+    val gap = 2
+    val sub = 3
+    val dataSize = 8
     val s = SWModel(gap,sub)
-    test(new SWCell(gap,sub)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    val p = new SWParams(gap,sub,dataSize)
+    test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       val result = s.computeCell(2,1,0,0,0)
       dut.io.q.poke(2.U)
       dut.io.r.poke(1.U)
@@ -52,10 +56,12 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "test overflow conditions" in {
-    val gap = 3
-    val sub = 2
+    val gap = 2
+    val sub = 3
+    val dataSize = 8
     val s = SWModel(gap,sub)
-    test(new SWCell(gap,sub)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
+    val p = new SWParams(gap,sub,dataSize)
+    test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
       val result = s.computeCell(3,3,255,255,255) 
       dut.io.q.poke(3.U)
       dut.io.r.poke(3.U)
@@ -70,11 +76,13 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
     
   it should "exhaustively test SWCell (without running out of data)" in {
       // parameters
-      val gap = 3
-      val sub = 2
+      val gap = 2
+      val sub = 3
+      val dataSize = 8
       // Models
+      val p = new SWParams(gap,sub,dataSize)
       val s = SWModel(gap,sub)
-      test(new SWCell(gap,sub)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
           // Test Variables
           val top = Seq.tabulate((pow(2,5)).toInt)(n => n*8)
           val diag = Seq.tabulate((pow(2,5)).toInt)(n => n*8)
@@ -94,9 +102,8 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
                 dut.io.diag.poke(diag(j).U)
                 dut.io.left.poke(left(k).U)
                 dut.clock.step()
-                print("Test: "+i+" "+j+" "+k+" "+q+" "+r+" "+result+"\n")
+                // print("Test: "+i+" "+j+" "+k+" "+q+" "+r+" "+result+"\n")
                 dut.io.result.expect(result)
-                // print("Pass: "+i+" "+j+" "+k+" "+q+" "+r+"\n")
               }
             }
           }
