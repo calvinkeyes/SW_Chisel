@@ -60,7 +60,11 @@ int main(int argc, char** argv) {
     // Set VSW's input signals
 	SW->reset = !0;
 	SW->clock = 0;
-	SW->io_in = 0;
+	SW->io_q = 0;
+    SW->io_r = 0;
+    SW->io_top = 0;
+    SW->io_diag = 0;
+    SW->io_left = 0;
 
 	for (int i = 0; i < 16; i++) {
 		
@@ -78,66 +82,21 @@ int main(int argc, char** argv) {
 				SW->reset = !0;
 			}
 			// toggle input value
-			SW->io_in = !SW->io_in;
+			SW->io_q = 1;
+            SW->io_r = 1;
+            SW->io_top = 3;
+            SW->io_diag = 2;
+            SW->io_left = 4;
 		}
 
 		// Evaluate the model
 		SW->eval();
 
 		// print out the variables
-		VL_PRINTF("[%" PRId64 "] clock=%x reset=%x -> io_in=%x io_out=%x\n",
-                  contextp->time(), SW->clock, SW->reset, SW->io_in,
-                  SW->io_out);
-        
-		
-		// SW->io_in = !SW->io_in;
-		
+		VL_PRINTF("[%" PRId64 "] clock=%x reset=%x -> io_q=%x io_r=%x io_top=%x io_diag=%x io_left=%x io_result=%x\n",
+                  contextp->time(), SW->clock, SW->reset, SW->io_q,
+                  SW->io_r, SW->io_top, SW->io_diag, SW->io_left, SW->io_result);	
 	}	
-
-    // Simulate until $finish
-//    while (!contextp->gotFinish()) {
-//        // Historical note, before Verilator 4.200 Verilated::gotFinish()
-//        // was used above in place of contextp->gotFinish().
-//        // Most of the contextp-> calls can use Verilated:: calls instead;
-//        // the Verilated:: versions just assume there's a single context
-//        // being used (per thread).  It's faster and clearer to use the
-//        // newer contextp-> versions.
-//
-//        contextp->timeInc(1);  // 1 timeprecision period passes...
-//        // Historical note, before Verilator 4.200 a sc_time_stamp()
-//        // function was required instead of using timeInc.  Once timeInc()
-//        // is called (with non-zero), the Verilated libraries assume the
-//        // new API, and sc_time_stamp() will no longer work.
-//
-//        // Toggle a fast (time/2 period) clock
-//        SW->clk = !SW->clk;
-//
-//        // Toggle control signals on an edge that doesn't correspond
-//        // to where the controls are sampled; in this example we do
-//        // this only on a negedge of clk, because we know
-//        // reset is not sampled there.
-//        if (!SW->clk) {
-//            if (contextp->time() > 1 && contextp->time() < 10) {
-//                SW->reset_l = !1;  // Assert reset
-//            } else {
-//                SW->reset_l = !0;  // Deassert reset
-//            }
-//            // Assign some other inputs
-//            // SW->in_quad += 0x12;
-//        }
-//
-//        // Evaluate model
-//        // (If you have multiple models being simulated in the same
-//        // timestep then instead of eval(), call eval_step() on each, then
-//        // eval_end_step() on each. See the manual.)
-//        SW->eval();
-//
-//        // Read outputs
-//        //VL_PRINTF("[%" PRId64 "] clk=%x rstl=%x -> oquad=%" PRIx64
-//        //          " owide=%x_%08x_%08x\n",
-//        //          contextp->time(), SW->clk, SW->reset_l, SW->out_quad,
-//        //          SW->out_wide[2], SW->out_wide[1], SW->out_wide[0]);
-//    }
 
     // Final model cleanup
     SW->final();

@@ -10,13 +10,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "SWCell"
-  it should  "print hello world" in {
-    val p = new SWParams(2,3,8,false)
-    test(new SWCell(p)) { dut =>
-      dut.io.q.poke(1.U)
-	  }
-  }
-
   it should "Do a simple test" in {
     val gap = 2
     val sub = 3
