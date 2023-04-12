@@ -15,7 +15,8 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
     val sub = 3
     val dataSize = 8
     val fourBit = false
-    val p = new SWParams(gap,sub,dataSize,fourBit)
+    val fourArray = false
+    val p = new SWParams(gap,sub,dataSize,fourBit,fourArray)
     val s = SWModel(p)
     test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
       val result = s.computeCell(1,1,3,3,3)
@@ -35,7 +36,8 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
     val sub = 3
     val dataSize = 8
     val fourBit = false
-    val p = new SWParams(gap,sub,dataSize,fourBit)
+    val fourArray = false
+    val p = new SWParams(gap,sub,dataSize,fourBit,fourArray)
     val s = SWModel(p)
     test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       val result = s.computeCell(2,1,0,0,0)
@@ -55,7 +57,8 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
     val sub = 3
     val dataSize = 8
     val fourBit = false
-    val p = new SWParams(gap,sub,dataSize,fourBit)
+    val fourArray = false
+    val p = new SWParams(gap,sub,dataSize,fourBit,fourArray)
     val s = SWModel(p)
     test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
       val result = s.computeCell(3,3,255,255,255) 
@@ -76,8 +79,9 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
       val sub = 3
       val dataSize = 8
       val fourBit = false
+      val fourArray = false
       // Models
-      val p = new SWParams(gap,sub,dataSize,fourBit)
+      val p = new SWParams(gap,sub,dataSize,fourBit,fourArray)
       val s = SWModel(p)
       test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
           // Test Variables
