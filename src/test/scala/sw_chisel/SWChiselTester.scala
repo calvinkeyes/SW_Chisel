@@ -18,7 +18,7 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
     val r_len = 10
     val q_len = 6
     val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
-    val s = new SWModel(p)
+    val s = new SWCellModel(p)
     test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
       val (res0,res1,res2) = s.computeCell(0,0,-2,0,-2,0,0)
       dut.io.q.poke(1.U)
@@ -49,7 +49,7 @@ class SWChisel extends AnyFlatSpec with ChiselScalatestTester {
       val r_len = 10
       val q_len = 6
       val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
-      val s = new SWModel(p)
+      val s = new SWCellModel(p)
       test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
         val ve_i = Seq(-2,  2, -3, 0,  0, -4, -1,  0, -1, -5,  2, -2, -2, -2, -6,  0,  0,  2,  1, -3, -7)
         val e_i = Seq( -2, -3, -3, 0, -4, -4, -1, -2, -5, -5, -3, -2, -3, -6, -6,  0, -3, -4, -4, -7, -7)
