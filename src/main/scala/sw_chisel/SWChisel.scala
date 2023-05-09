@@ -6,10 +6,14 @@ import chisel3.util._
 import chisel3.stage.ChiselStage
 import scala.math._
 
-case class SWParams(val gap: Int, val sub: Int, val dataSize: Int, val fourBit: Boolean,
-                    val fourArray: Boolean) {
-  // used to check for overflow
-  val max = pow(2,dataSize).toInt - 1
+case class SWParams(val alpha: Int, val beta: Int, val similarity: Int, val dataSize: Int,
+  val r_len: Int, val q_len: Int) {
+
+  // values for populating arrays
+  val e_len = q_len + 1
+  val f_len = r_len + 1
+  val v_len = e_len
+  
 }
 
 class SWIO(p: SWParams) extends Bundle {
@@ -17,101 +21,87 @@ class SWIO(p: SWParams) extends Bundle {
   // set bitwidth of input base pairs
   val q = Input(UInt(2.W))
   val r = Input(UInt(2.W))
-  if (p.fourBit) {
-    val q = Input(UInt(4.W))
-    val r = Input(UInt(4.W))
-  }
 }
 
 class SWCellIO(p: SWParams) extends SWIO(p: SWParams) {
-  // set scoring bitwidth
-  val top = Input(UInt(p.dataSize.W))
-  val diag = Input(UInt(p.dataSize.W))
-  val left = Input(UInt(p.dataSize.W))
+
+  // set input bitwidth
+  val e_i = Input(SInt(p.dataSize.W))
+  val f_i = Input(SInt(p.dataSize.W))
+  val ve_i = Input(SInt(p.dataSize.W))
+  val vf_i = Input(SInt(p.dataSize.W))
+  val vv_i = Input(SInt(p.dataSize.W))
 
   // set result bitwidth
-  val result = Output(UInt(p.dataSize.W))
+  val e_o = Output(SInt(p.dataSize.W))
+  val f_o = Output(SInt(p.dataSize.W))
+  val v_o = Output(SInt(p.dataSize.W))
 }
 
 class SWCell(p: SWParams) extends Module {
   val io = IO(new SWCellIO(p))
 
-  // declare temporary value wires
-  val topWire = WireInit(0.U)
-  val leftWire = WireInit(0.U)
-  val diagWire = WireInit(0.U)
-  val topLeftWire = WireInit(0.U)
-  val result = RegInit(0.U)
+  val e_max = WireInit(0.S)
+  val f_max = WireInit(0.S)
+  val v_max = WireInit(0.S)
+  val ef_temp = WireInit(0.S)
+  val v_temp = WireInit(0.S)
 
-  // set output
-  io.result := result
+  io.e_o := e_max
+  io.f_o := f_max
+  io.v_o := v_max
 
-  // check for underflow
-  when (p.gap.U >= io.top) {
-    topWire := 0.U
+  // find e score
+  when (io.ve_i - p.alpha.S > io.e_i - p.beta.S) {
+    e_max := io.ve_i - p.alpha.S
   } .otherwise {
-    topWire := io.top - p.gap.U
-  }
-  // check for underflow
-  when (p.gap.U >= io.left) {
-    leftWire := 0.U
-  } .otherwise {
-    leftWire := io.left - p.gap.U
-  }
-  // check for overflow and underflow
-  when (if(p.fourBit) (io.q & io.r).asBools.reduce{_ | _} else io.q === io.r ) {
-    when (io.diag +& p.sub.U > p.max.U) {
-      diagWire := p.max.U
-    } .otherwise {
-      diagWire := io.diag + p.sub.U
-    }
-  } .otherwise {
-    when (p.sub.U >= io.diag) {
-      diagWire := 0.U
-    } .otherwise {
-      diagWire := io.diag - p.sub.U
-    }
+    e_max := io.e_i - p.beta.S
   }
 
-  // set result value
-  when (topWire > leftWire) {
-    topLeftWire := topWire
+  // find f score
+  when (io.vf_i - p.alpha.S > io.f_i - p.beta.S) {
+    f_max := io.vf_i - p.alpha.S
   } .otherwise {
-    topLeftWire := leftWire
+    f_max := io.f_i - p.beta.S
   }
 
-  when (diagWire > topLeftWire) {
-    result := diagWire
+  // find v score
+  when (e_max > f_max) {
+    ef_temp := e_max
   } .otherwise {
-    result := topLeftWire
+    ef_temp := f_max
   }
 
-  // printf("Hello World - in SWCell\n")
+  when (io.q === io.r) {
+    v_temp := io.vv_i + p.similarity.S
+  } .otherwise {
+    v_temp := io.vv_i - p.similarity.S
+  }
+
+  when (v_temp > ef_temp) {
+    v_max := v_temp
+  } .otherwise {
+    v_max := ef_temp
+  }
 
 }
 
 class SW(p: SWParams) extends Module {
-  val io = IO(new SWIO(p))
+  val io = IO(new SWCellIO(p))
 
-  val cell0 = Module(new SWCell(p))
-  io <> cell0.io
-
-  if (p.fourArray) {
-    val cell1 = Module(new SWCell(p))
-    val cell2 = Module(new SWCell(p))
-    val cell3 = Module(new SWCell(p))
-  }
-
-
+  val cell = Module(new SWCell(p))
+  io <> cell.io
+  
   printf("In SW\n")
 }
 
 object SWDriver extends App {
-  val gap = 2
-  val sub = 3
-  val dataSize = 8
-  val fourBit = false
-  val fourArray = false
-  val p = new SWParams(gap,sub,dataSize,fourBit,fourArray)
+  val alpha = 2
+  val beta = 1
+  val similarity = 2
+  val dataSize = 16
+  val r_len = 10
+  val q_len = 6
+  val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
   (new ChiselStage).emitVerilog(new SW(p), args)
 }
