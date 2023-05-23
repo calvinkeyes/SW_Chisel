@@ -73,18 +73,23 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   behavior of "SWChisel"
-  it should "print out the state at every cycle" in {
+  it should "test a known smith waterman array" in {
     val alpha = 2
     val beta = 1
     val similarity = 2
     val dataSize = 16
     val r_len = 10
     val q_len = 6
-    val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
-    val s = new SWCellModel(p)
     val ref = "agtactgcga"
     val query = "actgac"
+    val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
+    val s = new SWModel(query, ref, p)
     test(new SW(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
+
+      // compute results
+      s.compute_mat()
+      
+
       // assign r values
       for (i <- 0 until r_len){
         if (ref(i) == 'a') {
@@ -119,73 +124,229 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step()
       dut.io.start.poke(true.B)
       dut.clock.step()
+      dut.clock.step()
 
-      // print array
-      for (j <- 0 to r_len + q_len){
+      var count = 1
 
-        if ( j >= r_len) {
-          dut.io.start.poke(false.B)
+      // ramp-up testing
+      for (j <- 1 to q_len) {
+        // print out the cycle
+        println(s"cycle $count")
+        // println()
+        // check the ramp up registers
+        for (i <- 0 until j) {
+          // println(dut.io.v1_out(i+1).peek())
+          // println(s.v(i+1)(j-i))
+          dut.io.v1_out(i+1).expect(s.v(i+1)(j-i))
+          dut.io.e_out(i).expect(s.e(i+1)(j-i))
+          dut.io.f_out(i+1).expect(s.f(i+1)(j-i))
         }
-
-        // print clock cycle
-        println(s"cycle $j")
-        println("")
-      
-        // print v1
-        println("V1")
-        println(dut.io.v_max.peek())
-        println(dut.io.e_max_o.peek())
-        println(dut.io.f_max_o.peek())
-        println(dut.io.v_temp.peek())
-        println()
-        for (i <- 0 until p.v_len) {
-          println(dut.io.v1_out(i).peek())
-        }
-        // print v2
-        println("V2")
-        for (i <- 0 until p.v_len) {
-          println(dut.io.v2_out(i).peek())
-        }
-        // print e
-        println("E")
-        println(dut.io.e_max.peek())
-        println(dut.io.e_i_out.peek())
-        println(dut.io.ve_i_out.peek())
-        println()
-        for (i <- 0 until p.e_len) {
-          println(dut.io.e_out(i).peek())
-        }
-        // print f
-        println("F")
-        for (i <- 0 until p.f_len) {
-          println(dut.io.f_out(i).peek())
-        }
-        println()
+        // println()
+        count = count + 1
         dut.clock.step()
-      
       }
 
+      // Test when pipeline is full
+      for (j <- q_len+1 to r_len) {
+        // print out the cycle
+        println(s"cycle $count")
+        // println()
 
-      
-      println(dut.io.done.peek())
-      println(dut.io.result.peek())
-      // for  (i <- 0 until 30) {
-      //   println(i)
-      //   println(dut.io.done.peek())
-      //   dut.clock.step()
-      // }
-      // println(dut.io.done.peek())
+        // check pipeline full registers
+        for (i <- 0 until q_len) {
+          // println(dut.io.v1_out(i+1).peek())
+          // println(s.v(i+1)(j-i))
+          dut.io.v1_out(i+1).expect(s.v(i+1)(j-i))
+          dut.io.e_out(i).expect(s.e(i+1)(j-i))
+          dut.io.f_out(i+1).expect(s.f(i+1)(j-i))
+        }
 
+        // println()
+        count = count + 1
+        dut.clock.step()
+      }
 
+      // Test when emptying pipeline
+      for (j <- r_len+1 until q_len+r_len) {
+        // print out cycle number
+        println(s"cycle $count")
+        // println()
 
+        // check ramp down registers
+        var k = 0
+        for (i <- q_len+r_len-j until 0 by -1) {
+          dut.io.v1_out(q_len-i+1).expect(s.v(q_len-i+1)(r_len-k))
+          dut.io.e_out(q_len-i).expect(s.e(q_len-i+1)(r_len-k))
+          dut.io.f_out(q_len-i+1).expect(s.f(q_len-i+1)(r_len-k))
+          k = k + 1
+        }
+        // println()
+        count = count + 1
+        dut.clock.step()
 
-
-
-
-
-
-
+      }
+      println(s"cycle $count")
+      dut.io.done.expect(true)
+      println()
+      println("TEST PASSED!")
+      println(s"Result: ${dut.io.result.peek()}")
     }
   }
+
+  it should "test a randomly generated smith waterman array" in {
+    val alpha = 2
+    val beta = 1
+    val similarity = 2
+    val dataSize = 16
+    val r_len = 100
+    val q_len = 16
+
+    // generate random query
+    val rand = scala.util.Random
+    var query : String = ""
+    for (i <- 0 until q_len) {
+      val num = rand.nextInt(3)
+      if (num == 0) {
+        query = query.concat("a")
+      } else if (num == 1) {
+        query = query.concat("c")
+      } else if (num == 2) {
+        query = query.concat("t")
+      } else if (num == 3) {
+        query = query.concat("g")
+      } else {
+        println("ERROR STOP")
+      }
+    }
+
+    // generate random ref
+    var ref : String = ""
+    for (i <- 0 until r_len) {
+      val num = rand.nextInt(3)
+      if (num == 0) {
+        ref = ref.concat("a")
+      } else if (num == 1) {
+        ref = ref.concat("c")
+      } else if (num == 2) {
+        ref = ref.concat("t")
+      } else if (num == 3) {
+        ref = ref.concat("g")
+      } else {
+        println("ERROR STOP")
+      }
+    }
+
+    println(query)
+    println(ref)
+    val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
+    val s = new SWModel(query, ref, p)
+    test(new SW(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
+
+      // compute results
+      s.compute_mat()
+      
+      // assign r values
+      for (i <- 0 until r_len){
+        if (ref(i) == 'a') {
+          dut.io.r(i).b.poke(0.U)
+        } else if (ref(i) == 'c') {
+          dut.io.r(i).b.poke(1.U)
+        } else if (ref(i) == 't') {
+          dut.io.r(i).b.poke(2.U)
+        } else {
+          dut.io.r(i).b.poke(3.U)
+        }
+      }
+      // assign q values
+      for (i <- 0 until q_len){
+        if (query(i) == 'a') {
+          dut.io.q(i).b.poke(0.U)
+        } else if (query(i) == 'c') {
+          dut.io.q(i).b.poke(1.U)
+        } else if (query(i) == 't') {
+          dut.io.q(i).b.poke(2.U)
+        } else {
+          dut.io.q(i).b.poke(3.U)
+        }
+      }
+
+      // print out all of the values from the 
+      println()
+      println()
+      println("testing SWChisel")
+      println()
+
+      dut.clock.step()
+      dut.io.start.poke(true.B)
+      dut.clock.step()
+      dut.clock.step()
+
+      var count = 1
+
+      // ramp-up testing
+      for (j <- 1 to q_len) {
+        // print out the cycle
+        println(s"cycle $count")
+        // println()
+        // check the ramp up registers
+        for (i <- 0 until j) {
+          // println(dut.io.v1_out(i+1).peek())
+          // println(s.v(i+1)(j-i))
+          dut.io.v1_out(i+1).expect(s.v(i+1)(j-i))
+          dut.io.e_out(i).expect(s.e(i+1)(j-i))
+          dut.io.f_out(i+1).expect(s.f(i+1)(j-i))
+        }
+        // println()
+        count = count + 1
+        dut.clock.step()
+      }
+
+      // Test when pipeline is full
+      for (j <- q_len+1 to r_len) {
+        // print out the cycle
+        println(s"cycle $count")
+        // println()
+
+        // check pipeline full registers
+        for (i <- 0 until q_len) {
+          // println(dut.io.v1_out(i+1).peek())
+          // println(s.v(i+1)(j-i))
+          dut.io.v1_out(i+1).expect(s.v(i+1)(j-i))
+          dut.io.e_out(i).expect(s.e(i+1)(j-i))
+          dut.io.f_out(i+1).expect(s.f(i+1)(j-i))
+        }
+
+        // println()
+        count = count + 1
+        dut.clock.step()
+      }
+
+      // Test when emptying pipeline
+      for (j <- r_len+1 until q_len+r_len) {
+        // print out cycle number
+        println(s"cycle $count")
+        // println()
+
+        // check ramp down registers
+        var k = 0
+        for (i <- q_len+r_len-j until 0 by -1) {
+          dut.io.v1_out(q_len-i+1).expect(s.v(q_len-i+1)(r_len-k))
+          dut.io.e_out(q_len-i).expect(s.e(q_len-i+1)(r_len-k))
+          dut.io.f_out(q_len-i+1).expect(s.f(q_len-i+1)(r_len-k))
+          k = k + 1
+        }
+        // println()
+        count = count + 1
+        dut.clock.step()
+
+      }
+      println(s"cycle $count")
+      dut.io.done.expect(true)
+      println()
+      println("TEST PASSED!")
+      println(s"Result: ${dut.io.result.peek()}")
+    }
+  }
+
 
 }

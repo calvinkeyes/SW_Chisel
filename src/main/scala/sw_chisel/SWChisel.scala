@@ -38,13 +38,13 @@ class SWIO(p: SWParams) extends Bundle {
   val v2_out = Vec(p.v_len, Output(SInt(p.dataSize.W)))
   val e_out = Vec(p.e_len, Output(SInt(p.dataSize.W)))
   val f_out = Vec(p.f_len, Output(SInt(p.dataSize.W)))
-  val e_max = Output(SInt(p.dataSize.W))
-  val e_i_out = Output(SInt(p.dataSize.W))
-  val ve_i_out = Output(SInt(p.dataSize.W))
-  val v_max = Output(SInt(p.dataSize.W))
-  val f_max_o = Output(SInt(p.dataSize.W))
-  val e_max_o = Output(SInt(p.dataSize.W))
-  val v_temp = Output(SInt(p.dataSize.W))
+  // val e_max = Output(SInt(p.dataSize.W))
+  // val e_i_out = Output(SInt(p.dataSize.W))
+  // val ve_i_out = Output(SInt(p.dataSize.W))
+  // val v_max = Output(SInt(p.dataSize.W))
+  // val f_max_o = Output(SInt(p.dataSize.W))
+  // val e_max_o = Output(SInt(p.dataSize.W))
+  // val v_temp = Output(SInt(p.dataSize.W))
 }
 
 class SWCellIO(p: SWParams) extends Bundle {
@@ -66,9 +66,9 @@ class SWCellIO(p: SWParams) extends Bundle {
   val v_o = Output(SInt(p.dataSize.W))
 
   // debugging v
-  val f_max_o = Output(SInt(p.dataSize.W))
-  val e_max_o = Output(SInt(p.dataSize.W))
-  val v_temp = Output(SInt(p.dataSize.W))
+  // val f_max_o = Output(SInt(p.dataSize.W))
+  // val e_max_o = Output(SInt(p.dataSize.W))
+  // val v_temp = Output(SInt(p.dataSize.W))
 }
 
 class SWCell(p: SWParams) extends Module {
@@ -87,9 +87,9 @@ class SWCell(p: SWParams) extends Module {
   io.v_o := v_max
 
   // debugging outputs
-  io.e_max_o := e_max
-  io.f_max_o := f_max
-  io.v_temp := v_temp
+  // io.e_max_o := e_max
+  // io.f_max_o := f_max
+  // io.v_temp := v_temp
 
   // find e score
   when (io.ve_i - p.alpha.S >= io.e_i - p.beta.S) {
@@ -147,7 +147,7 @@ class MAX(p: SWParams) extends Module {
   }
 
   // counter to calculate done
-  val counter = RegInit(p.r_len.U)
+  val counter = RegInit((p.r_len+1).U)
   when (io.start) {
     counter := counter - 1.U
   } .otherwise {
@@ -185,7 +185,7 @@ class SW(p: SWParams) extends Module {
 
   // create array of SW units
   val array = Seq.fill(p.q_len)(Module(new SWCell(p)))
-  val r_count = Seq.fill(p.q_len)(Module(new MyCounter(p.q_len)))
+  val r_count = Seq.fill(p.q_len)(Module(new MyCounter(p.r_len)))
 
   // create one max unit
   val max = Module(new MAX(p))
@@ -199,15 +199,15 @@ class SW(p: SWParams) extends Module {
   io.done := max.io.done
 
   // assign e debugging
-  io.e_max := array(0).io.e_o
-  io.e_i_out := E(0)
-  io.ve_i_out := V1(1)
+  // io.e_max := array(1).io.e_o
+  // io.e_i_out := E(1)
+  // io.ve_i_out := V1(2)
 
   // assign e debugging
-  io.v_max := array(0).io.v_o
-  io.e_max_o := array(0).io.e_max_o
-  io.f_max_o := array(0).io.f_max_o
-  io.v_temp := array(0).io.v_temp
+  // io.v_max := array(1).io.v_o
+  // io.e_max_o := array(1).io.e_max_o
+  // io.f_max_o := array(1).io.f_max_o
+  // io.v_temp := array(1).io.v_temp
 
   // shift over start bit value
   start_reg(0) := io.start
@@ -215,18 +215,24 @@ class SW(p: SWParams) extends Module {
     start_reg(i) := start_reg(i-1)
   }
 
+  // printf(p"start_reg(5) = ${start_reg(5)}\n")
+  // printf(p"max.io.in = ${max.io.in}\n")
+  // printf(p"max.io.out = ${max.io.out}\n")
+  // // printings start reg
+  // for (i <- 0 until start_reg.length){
+  //   printf(p"start_reg($i) = ${start_reg(i)}\n")
+  // }
+
   // initialize r_count
-  r_count(0).io.en := io.start
-  for (i <- 1 until r_count.length) {
-    r_count(i).io.en := start_reg(i-1)
+  for (i <- 0 until r_count.length) {
+    r_count(i).io.en := start_reg(i)
   }
   
-  // initialize array of SW units
-  for (i <- 0 until p.q_len) {
-    array(i).io.q := io.q(i).b
-    array(i).io.r := io.r(r_count(i).io.out).b
-  }
-  printf(p"q(0): ${io.q(0).b} r(0): ${io.r(r_count(0).io.out).b}\n")
+  // // printing r_count
+  // for (i <- 0 until r_count.length){
+  //   printf(p"r_count($i) = ${r_count(i).io.out}\n")
+  // }
+  // printf("\n")
 
   for (i <- 0 until p.q_len){     // SW Cell 0 computes row 1. 
     array(i).io.e_i := E(i)     // Gather E from the same row from 1 cycle ago
@@ -250,6 +256,22 @@ class SW(p: SWParams) extends Module {
       V1(i+1) := V1(i+1)
     }
   }
+
+  // initialize array of SW units
+  for (i <- 0 until p.q_len) {
+    array(i).io.q := io.q(i).b
+    array(i).io.r := io.r(r_count(i).io.out).b
+  }
+
+  // print out q and r values of each cell
+  // for (i <- 0 until p.q_len) {
+  //   printf(p"array($i): q = ${array(i).io.q} r = ${array(i).io.r}\n")
+  //   // printf(p"array($i).r = ${array(i).io.r}\n")
+  //   // printf(p"io.q($i).b = ${io.q(i).b}\n")
+  //   // printf(p"io.r(r_count($i).io.out).b = ${io.r(r_count(i).io.out).b}")
+  //   printf("\n")
+  // }
+  // printf("\n")
 
   // connect outputs
   for (i <- 0 until p.e_len) {
