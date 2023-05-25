@@ -11,13 +11,14 @@ import org.scalatest.flatspec.AnyFlatSpec
 class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "SWCell"
   it should "do a simple test" in {
+    val debug = true
     val alpha = 2
     val beta = 1
     val similarity = 2
     val dataSize = 16
     val r_len = 10
     val q_len = 6
-    val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
+    val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
     val s = new SWCellModel(p)
     test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
       val (res0,res1,res2) = s.computeCell(0,0,-2,0,-2,0,0)
@@ -37,13 +38,14 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
   
   // behavior of "SWCell"
   it should "do a more extensive test (dataSize = 16)" in {
+      val debug = true
       val alpha = 2
       val beta = 1
       val similarity = 2
       val dataSize = 16
       val r_len = 10
       val q_len = 6
-      val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
+      val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
       val s = new SWCellModel(p)
       test(new SWCell(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
         val ve_i = Seq(-2,  2, -3, 0,  0, -4, -1,  0, -1, -5,  2, -2, -2, -2, -6,  0,  0,  2,  1, -3, -7)
@@ -74,6 +76,7 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
 
   behavior of "SWChisel"
   it should "test a known smith waterman array" in {
+    val debug = true
     val alpha = 2
     val beta = 1
     val similarity = 2
@@ -82,7 +85,7 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
     val q_len = 6
     val ref = "agtactgcga"
     val query = "actgac"
-    val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
+    val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
     val s = new SWModel(query, ref, p)
     test(new SW(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
 
@@ -137,9 +140,9 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
         for (i <- 0 until j) {
           // println(dut.io.v1_out(i+1).peek())
           // println(s.v(i+1)(j-i))
-          dut.io.v1_out(i+1).expect(s.v(i+1)(j-i))
-          dut.io.e_out(i).expect(s.e(i+1)(j-i))
-          dut.io.f_out(i+1).expect(s.f(i+1)(j-i))
+          dut.io.v1_out.get(i+1).expect(s.v(i+1)(j-i))
+          dut.io.e_out.get(i).expect(s.e(i+1)(j-i))
+          dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
         }
         // println()
         count = count + 1
@@ -156,9 +159,9 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
         for (i <- 0 until q_len) {
           // println(dut.io.v1_out(i+1).peek())
           // println(s.v(i+1)(j-i))
-          dut.io.v1_out(i+1).expect(s.v(i+1)(j-i))
-          dut.io.e_out(i).expect(s.e(i+1)(j-i))
-          dut.io.f_out(i+1).expect(s.f(i+1)(j-i))
+          dut.io.v1_out.get(i+1).expect(s.v(i+1)(j-i))
+          dut.io.e_out.get(i).expect(s.e(i+1)(j-i))
+          dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
         }
 
         // println()
@@ -175,9 +178,9 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
         // check ramp down registers
         var k = 0
         for (i <- q_len+r_len-j until 0 by -1) {
-          dut.io.v1_out(q_len-i+1).expect(s.v(q_len-i+1)(r_len-k))
-          dut.io.e_out(q_len-i).expect(s.e(q_len-i+1)(r_len-k))
-          dut.io.f_out(q_len-i+1).expect(s.f(q_len-i+1)(r_len-k))
+          dut.io.v1_out.get(q_len-i+1).expect(s.v(q_len-i+1)(r_len-k))
+          dut.io.e_out.get(q_len-i).expect(s.e(q_len-i+1)(r_len-k))
+          dut.io.f_out.get(q_len-i+1).expect(s.f(q_len-i+1)(r_len-k))
           k = k + 1
         }
         // println()
@@ -194,12 +197,13 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "test a randomly generated smith waterman array" in {
+    val debug = true
     val alpha = 2
     val beta = 1
     val similarity = 2
     val dataSize = 16
     val r_len = 100
-    val q_len = 16
+    val q_len = 20
 
     // generate random query
     val rand = scala.util.Random
@@ -236,9 +240,9 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       }
     }
 
-    println(query)
-    println(ref)
-    val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
+    // println(query)
+    // println(ref)
+    val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
     val s = new SWModel(query, ref, p)
     test(new SW(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
 
@@ -286,15 +290,15 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       // ramp-up testing
       for (j <- 1 to q_len) {
         // print out the cycle
-        println(s"cycle $count")
+        // println(s"cycle $count")
         // println()
         // check the ramp up registers
         for (i <- 0 until j) {
           // println(dut.io.v1_out(i+1).peek())
           // println(s.v(i+1)(j-i))
-          dut.io.v1_out(i+1).expect(s.v(i+1)(j-i))
-          dut.io.e_out(i).expect(s.e(i+1)(j-i))
-          dut.io.f_out(i+1).expect(s.f(i+1)(j-i))
+          dut.io.v1_out.get(i+1).expect(s.v(i+1)(j-i))
+          dut.io.e_out.get(i).expect(s.e(i+1)(j-i))
+          dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
         }
         // println()
         count = count + 1
@@ -304,16 +308,16 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       // Test when pipeline is full
       for (j <- q_len+1 to r_len) {
         // print out the cycle
-        println(s"cycle $count")
+        // println(s"cycle $count")
         // println()
 
         // check pipeline full registers
         for (i <- 0 until q_len) {
           // println(dut.io.v1_out(i+1).peek())
           // println(s.v(i+1)(j-i))
-          dut.io.v1_out(i+1).expect(s.v(i+1)(j-i))
-          dut.io.e_out(i).expect(s.e(i+1)(j-i))
-          dut.io.f_out(i+1).expect(s.f(i+1)(j-i))
+          dut.io.v1_out.get(i+1).expect(s.v(i+1)(j-i))
+          dut.io.e_out.get(i).expect(s.e(i+1)(j-i))
+          dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
         }
 
         // println()
@@ -324,15 +328,15 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       // Test when emptying pipeline
       for (j <- r_len+1 until q_len+r_len) {
         // print out cycle number
-        println(s"cycle $count")
+        // println(s"cycle $count")
         // println()
 
         // check ramp down registers
         var k = 0
         for (i <- q_len+r_len-j until 0 by -1) {
-          dut.io.v1_out(q_len-i+1).expect(s.v(q_len-i+1)(r_len-k))
-          dut.io.e_out(q_len-i).expect(s.e(q_len-i+1)(r_len-k))
-          dut.io.f_out(q_len-i+1).expect(s.f(q_len-i+1)(r_len-k))
+          dut.io.v1_out.get(q_len-i+1).expect(s.v(q_len-i+1)(r_len-k))
+          dut.io.e_out.get(q_len-i).expect(s.e(q_len-i+1)(r_len-k))
+          dut.io.f_out.get(q_len-i+1).expect(s.f(q_len-i+1)(r_len-k))
           k = k + 1
         }
         // println()

@@ -6,14 +6,13 @@ import chisel3.util._
 import chisel3.stage.ChiselStage
 import scala.math._
 
-case class SWParams(val alpha: Int, val beta: Int, val similarity: Int, val dataSize: Int,
-  val r_len: Int, val q_len: Int) {
+case class SWParams(val debug: Boolean, val alpha: Int, val beta: Int, val similarity: Int, 
+val dataSize: Int, val r_len: Int, val q_len: Int) {
 
   // values for populating arrays
   val e_len = q_len
   val f_len = q_len + 1
   val v_len = q_len + 1
-  
 }
 
 class SWBaseIO extends Bundle {
@@ -34,17 +33,10 @@ class SWIO(p: SWParams) extends Bundle {
   val done = Output(Bool())
 
   // Debugging output
-  val v1_out = Vec(p.v_len, Output(SInt(p.dataSize.W)))
-  val v2_out = Vec(p.v_len, Output(SInt(p.dataSize.W)))
-  val e_out = Vec(p.e_len, Output(SInt(p.dataSize.W)))
-  val f_out = Vec(p.f_len, Output(SInt(p.dataSize.W)))
-  // val e_max = Output(SInt(p.dataSize.W))
-  // val e_i_out = Output(SInt(p.dataSize.W))
-  // val ve_i_out = Output(SInt(p.dataSize.W))
-  // val v_max = Output(SInt(p.dataSize.W))
-  // val f_max_o = Output(SInt(p.dataSize.W))
-  // val e_max_o = Output(SInt(p.dataSize.W))
-  // val v_temp = Output(SInt(p.dataSize.W))
+  val v1_out = if (p.debug) Some(Vec(p.v_len, Output(SInt(p.dataSize.W)))) else None
+  val v2_out = if (p.debug) Some(Vec(p.v_len, Output(SInt(p.dataSize.W)))) else None
+  val e_out = if (p.debug) Some(Vec(p.e_len, Output(SInt(p.dataSize.W)))) else None
+  val f_out = if (p.debug) Some(Vec(p.f_len, Output(SInt(p.dataSize.W)))) else None
 }
 
 class SWCellIO(p: SWParams) extends Bundle {
@@ -65,10 +57,6 @@ class SWCellIO(p: SWParams) extends Bundle {
   val f_o = Output(SInt(p.dataSize.W))
   val v_o = Output(SInt(p.dataSize.W))
 
-  // debugging v
-  // val f_max_o = Output(SInt(p.dataSize.W))
-  // val e_max_o = Output(SInt(p.dataSize.W))
-  // val v_temp = Output(SInt(p.dataSize.W))
 }
 
 class SWCell(p: SWParams) extends Module {
@@ -82,14 +70,11 @@ class SWCell(p: SWParams) extends Module {
   val v_temp = WireInit(0.S(p.dataSize.W))
 
   // assign outputs
-  io.e_o := e_max
-  io.f_o := f_max
-  io.v_o := v_max
-
-  // debugging outputs
-  // io.e_max_o := e_max
-  // io.f_max_o := f_max
-  // io.v_temp := v_temp
+  if (p.debug) {
+    io.e_o := e_max
+    io.f_o := f_max
+    io.v_o := v_max
+  }
 
   // find e score
   when (io.ve_i - p.alpha.S >= io.e_i - p.beta.S) {
@@ -198,41 +183,16 @@ class SW(p: SWParams) extends Module {
   io.result := max.io.out
   io.done := max.io.done
 
-  // assign e debugging
-  // io.e_max := array(1).io.e_o
-  // io.e_i_out := E(1)
-  // io.ve_i_out := V1(2)
-
-  // assign e debugging
-  // io.v_max := array(1).io.v_o
-  // io.e_max_o := array(1).io.e_max_o
-  // io.f_max_o := array(1).io.f_max_o
-  // io.v_temp := array(1).io.v_temp
-
   // shift over start bit value
   start_reg(0) := io.start
   for (i <- 1 until start_reg.length) {
     start_reg(i) := start_reg(i-1)
   }
 
-  // printf(p"start_reg(5) = ${start_reg(5)}\n")
-  // printf(p"max.io.in = ${max.io.in}\n")
-  // printf(p"max.io.out = ${max.io.out}\n")
-  // // printings start reg
-  // for (i <- 0 until start_reg.length){
-  //   printf(p"start_reg($i) = ${start_reg(i)}\n")
-  // }
-
   // initialize r_count
   for (i <- 0 until r_count.length) {
     r_count(i).io.en := start_reg(i)
   }
-  
-  // // printing r_count
-  // for (i <- 0 until r_count.length){
-  //   printf(p"r_count($i) = ${r_count(i).io.out}\n")
-  // }
-  // printf("\n")
 
   for (i <- 0 until p.q_len){     // SW Cell 0 computes row 1. 
     array(i).io.e_i := E(i)     // Gather E from the same row from 1 cycle ago
@@ -263,41 +223,32 @@ class SW(p: SWParams) extends Module {
     array(i).io.r := io.r(r_count(i).io.out).b
   }
 
-  // print out q and r values of each cell
-  // for (i <- 0 until p.q_len) {
-  //   printf(p"array($i): q = ${array(i).io.q} r = ${array(i).io.r}\n")
-  //   // printf(p"array($i).r = ${array(i).io.r}\n")
-  //   // printf(p"io.q($i).b = ${io.q(i).b}\n")
-  //   // printf(p"io.r(r_count($i).io.out).b = ${io.r(r_count(i).io.out).b}")
-  //   printf("\n")
-  // }
-  // printf("\n")
-
-  // connect outputs
-  for (i <- 0 until p.e_len) {
-    io.e_out(i) := E(i)
-  }
-
-  for (i <- 0 until p.v_len) {
-    io.f_out(i) := F(i)
-    io.v1_out(i) := V1(i)
-    io.v2_out(i) := V2(i)
-  }
-
   // Shift over the bits from V1 to V2
   for (i <- 0 until p.v_len) {
     V2(i) := V1(i)
   }
 
+  // connect outputs
+  for (i <- 0 until p.e_len) {
+    io.e_out.get(i) := E(i)
+  }
+
+  for (i <- 0 until p.v_len) {
+    io.f_out.get(i) := F(i)
+    io.v1_out.get(i) := V1(i)
+    io.v2_out.get(i) := V2(i)
+  }
+
 }
 
 object SWDriver extends App {
+  val debug = false
   val alpha = 2
   val beta = 1
   val similarity = 2
   val dataSize = 16
   val r_len = 10
   val q_len = 6
-  val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
+  val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
   (new ChiselStage).emitVerilog(new SW(p), args)
 }

@@ -8,13 +8,14 @@ import org.scalatest.flatspec.AnyFlatSpec
 class SWCellModelTester extends AnyFlatSpec with ChiselScalatestTester {
     behavior of "SWCellModel" 
     it should "Check score (dataSize = 16)" in {
+        val debug = true
         val alpha = 2
         val beta = 1
         val similarity = 2
         val dataSize = 16
         val r_len = 10
         val q_len = 6
-        val p = new SWParams(alpha,beta,similarity,dataSize,r_len,q_len)
+        val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
         val s = new SWCellModel(p)
         val ve_i = Seq(-2,  2, -3, 0,  0, -4, -1,  0, -1, -5,  2, -2, -2, -2, -6,  0,  0,  2,  1, -3, -7)
         val e_i = Seq( -2, -3, -3, 0, -4, -4, -1, -2, -5, -5, -3, -2, -3, -6, -6,  0, -3, -4, -4, -7, -7)
