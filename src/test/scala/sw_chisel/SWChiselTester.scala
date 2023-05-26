@@ -201,9 +201,9 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
     val alpha = 2
     val beta = 1
     val similarity = 2
-    val dataSize = 16
-    val r_len = 100
-    val q_len = 20
+    val r_len = 10
+    val q_len = 6
+    val dataSize =  ceil(log(q_len*2)/log(2)).toInt + 1 //log2Ceil(q_len*2) + 1
 
     // generate random query
     val rand = scala.util.Random

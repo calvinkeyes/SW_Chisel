@@ -25,17 +25,54 @@ class SWModelTester extends AnyFlatSpec with ChiselScalatestTester {
         println("max: "+s.find_max().toString())
     }
 
-    it should "get values from internal matrices" in {
+    it should "find the maximum value we could have" in {
         val debug = true
         val alpha = 2
         val beta = 1
         val similarity = 2
         val dataSize = 16
-        val r_len = 10
-        val q_len = 6
+        val r_len = 1000
+        val q_len = 100
+
+        // generate random query
+        val rand = scala.util.Random
+        var query : String = ""
+        for (i <- 0 until q_len) {
+            val num = rand.nextInt(3)
+            if (num == 0) {
+                
+                query = query.concat("a")
+            } else if (num == 1) {
+                query = query.concat("c")
+            } else if (num == 2) {
+                query = query.concat("t")
+            } else if (num == 3) {
+                query = query.concat("g")
+            } else {
+                println("ERROR STOP")
+            }
+        }
+
+        // generate random ref
+        var ref : String = ""
+        for (i <- 0 until r_len) {
+        val num = rand.nextInt(3)
+        if (num == 0) {
+            ref = ref.concat("a")
+        } else if (num == 1) {
+            ref = ref.concat("c")
+        } else if (num == 2) {
+            ref = ref.concat("t")
+        } else if (num == 3) {
+            ref = ref.concat("g")
+        } else {
+            println("ERROR STOP")
+        }
+        }
+
         val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
-        val s = new SWModel("actgac","agtactgcga",p)
+        val s = new SWModel(query,ref,p)
         s.compute_mat()
-        println(s.v(1)(1))
+        println("max value: "+s.find_max())
     }
 }

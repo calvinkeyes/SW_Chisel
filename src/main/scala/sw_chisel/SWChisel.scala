@@ -33,7 +33,7 @@ class SWIO(p: SWParams) extends Bundle {
   val done = Output(Bool())
 
   // Debugging output
-  val v1_out = if (p.debug) Some(Vec(p.v_len, Output(SInt(p.dataSize.W)))) else None
+  val v1_out = if (p.debug) Some( Vec(p.v_len, Output(SInt(p.dataSize.W))) ) else None
   val v2_out = if (p.debug) Some(Vec(p.v_len, Output(SInt(p.dataSize.W)))) else None
   val e_out = if (p.debug) Some(Vec(p.e_len, Output(SInt(p.dataSize.W)))) else None
   val f_out = if (p.debug) Some(Vec(p.f_len, Output(SInt(p.dataSize.W)))) else None
@@ -70,11 +70,9 @@ class SWCell(p: SWParams) extends Module {
   val v_temp = WireInit(0.S(p.dataSize.W))
 
   // assign outputs
-  if (p.debug) {
-    io.e_o := e_max
-    io.f_o := f_max
-    io.v_o := v_max
-  }
+  io.e_o := e_max
+  io.f_o := f_max
+  io.v_o := v_max
 
   // find e score
   when (io.ve_i - p.alpha.S >= io.e_i - p.beta.S) {
@@ -230,13 +228,21 @@ class SW(p: SWParams) extends Module {
 
   // connect outputs
   for (i <- 0 until p.e_len) {
-    io.e_out.get(i) := E(i)
+    if (io.e_out != None) {
+      io.e_out.get(i) := E(i)
+    }
   }
 
   for (i <- 0 until p.v_len) {
-    io.f_out.get(i) := F(i)
-    io.v1_out.get(i) := V1(i)
-    io.v2_out.get(i) := V2(i)
+    if (io.f_out != None) {
+      io.f_out.get(i) := F(i)
+    }
+    if (io.v1_out != None) {
+      io.v1_out.get(i) := V1(i)
+    }
+    if (io.v2_out != None) {
+      io.v2_out.get(i) := V2(i)
+    }
   }
 
 }
@@ -246,9 +252,9 @@ object SWDriver extends App {
   val alpha = 2
   val beta = 1
   val similarity = 2
-  val dataSize = 16
   val r_len = 10
   val q_len = 6
+  val dataSize = log2Ceil(q_len*2) + 1
   val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
   (new ChiselStage).emitVerilog(new SW(p), args)
 }
