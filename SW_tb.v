@@ -92,11 +92,18 @@ module SW_tb;
         reset = 1'b0;
         @(posedge clock); 
 
-        i = 1;
+        for (i = 0; i < 11; i= i+ 1) begin
+            @(posedge clock);
+        end
+
+        #5
+        io_start = 1'b0;
+
         while (io_done == 1'b0) begin
             @(posedge clock);
             $display("cycle: %d",i);
             $display("done? %d", io_done);
+            $display("result: %d", io_result);
             i = i + 1;
         end
 

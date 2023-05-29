@@ -130,20 +130,26 @@ class MAX(p: SWParams) extends Module {
   }
 
   // counter to calculate done
-  val counter = RegInit((p.r_len+1).U)
-  when (io.start) {
-    counter := counter - 1.U
-  } .otherwise {
-    counter := counter
-  }
+  // val start_reg = RegInit(0.B)
+  io.done := !io.start 
+
+  // when (io.start) {
+  //   start_reg := true.B
+  // }
+  // val counter = RegInit((p.r_len+1).U)
+  // when (io.start) {
+  //   counter := counter - 1.U
+  // } .otherwise {
+  //   counter := counter
+  // }
   
   // calculate done
-  when (counter === 0.U) {
-    io.done := true.B
-    counter := 0.U
-  } .otherwise {
-    io.done := false.B
-  }
+  // when (counter === 0.U) {
+  //   io.done := true.B
+  //   counter := 0.U
+  // } .otherwise {
+  //   io.done := false.B
+  // }
 
 }
 
