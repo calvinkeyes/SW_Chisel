@@ -135,8 +135,7 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       for (j <- 1 to q_len) {
         // print out the cycle
         println(s"cycle $count")
-        println(dut.io.done.peek())
-        println()
+        // println()
         // check the ramp up registers
         for (i <- 0 until j) {
           // println(dut.io.v1_out(i+1).peek())
@@ -154,8 +153,7 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       for (j <- q_len+1 to r_len) {
         // print out the cycle
         println(s"cycle $count")
-        println(dut.io.done.peek())
-        println()
+        // println()
 
         // check pipeline full registers
         for (i <- 0 until q_len) {
@@ -172,12 +170,10 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       }
 
       // Test when emptying pipeline
-      dut.io.start.poke(false.B)
       for (j <- r_len+1 until q_len+r_len) {
         // print out cycle number
         println(s"cycle $count")
-        println(dut.io.done.peek())
-        println()
+        // println()
 
         // check ramp down registers
         var k = 0
@@ -193,9 +189,6 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
 
       }
       println(s"cycle $count")
-      println(dut.io.done.peek())
-      dut.clock.step()
-      println(dut.io.done.peek())
       dut.io.done.expect(true)
       println()
       println("TEST PASSED!")
@@ -333,7 +326,6 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       }
 
       // Test when emptying pipeline
-      dut.io.start.poke(false.B)
       for (j <- r_len+1 until q_len+r_len) {
         // print out cycle number
         // println(s"cycle $count")
@@ -353,10 +345,7 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
 
       }
       println(s"cycle $count")
-      // dut.io.done.expect(true)
-      dut.clock.step()
       dut.io.done.expect(true)
-      println(dut.io.done.peek())
       println()
       println("TEST PASSED!")
       println(s"Result: ${dut.io.result.peek()}")
