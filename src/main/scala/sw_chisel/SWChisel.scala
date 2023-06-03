@@ -247,14 +247,16 @@ class SW(p: SWParams) extends Module {
 
 }
 
+
+
 object SWDriver extends App {
   val debug = false
   val alpha = 2
   val beta = 1
   val similarity = 2
-  val r_len = 500
-  val q_len = 500
-  val dataSize = 12 //log2Ceil(q_len*2) + 1
+  val r_len = 750
+  val q_len = 750
+  val dataSize = 16 //log2Ceil(q_len*2) + 1
   val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
   (new ChiselStage).emitVerilog(new SW(p), args)
 }
