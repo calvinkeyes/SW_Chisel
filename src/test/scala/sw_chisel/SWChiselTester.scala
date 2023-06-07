@@ -89,10 +89,9 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
     val s = new SWModel(query, ref, p)
     test(new SW(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
 
-      // compute results
+      // compute model results
       s.compute_mat()
       
-
       // assign r values
       for (i <- 0 until r_len){
         if (ref(i) == 'a') {
@@ -135,11 +134,8 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       for (j <- 1 to q_len) {
         // print out the cycle
         println(s"cycle $count")
-        // println()
         // check the ramp up registers
         for (i <- 0 until j) {
-          // println(dut.io.v1_out(i+1).peek())
-          // println(s.v(i+1)(j-i))
           dut.io.v1_out.get(i+1).expect(s.v(i+1)(j-i))
           dut.io.e_out.get(i).expect(s.e(i+1)(j-i))
           dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
@@ -173,7 +169,6 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       for (j <- r_len+1 until q_len+r_len) {
         // print out cycle number
         println(s"cycle $count")
-        // println()
 
         // check ramp down registers
         var k = 0
@@ -289,13 +284,7 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
 
       // ramp-up testing
       for (j <- 1 to q_len) {
-        // print out the cycle
-        // println(s"cycle $count")
-        // println()
-        // check the ramp up registers
         for (i <- 0 until j) {
-          // println(dut.io.v1_out(i+1).peek())
-          // println(s.v(i+1)(j-i))
           dut.io.v1_out.get(i+1).expect(s.v(i+1)(j-i))
           dut.io.e_out.get(i).expect(s.e(i+1)(j-i))
           dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
@@ -307,14 +296,9 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
 
       // Test when pipeline is full
       for (j <- q_len+1 to r_len) {
-        // print out the cycle
-        // println(s"cycle $count")
-        // println()
 
         // check pipeline full registers
         for (i <- 0 until q_len) {
-          // println(dut.io.v1_out(i+1).peek())
-          // println(s.v(i+1)(j-i))
           dut.io.v1_out.get(i+1).expect(s.v(i+1)(j-i))
           dut.io.e_out.get(i).expect(s.e(i+1)(j-i))
           dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
@@ -327,11 +311,6 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
 
       // Test when emptying pipeline
       for (j <- r_len+1 until q_len+r_len) {
-        // print out cycle number
-        // println(s"cycle $count")
-        // println()
-
-        // check ramp down registers
         var k = 0
         for (i <- q_len+r_len-j until 0 by -1) {
           dut.io.v1_out.get(q_len-i+1).expect(s.v(q_len-i+1)(r_len-k))

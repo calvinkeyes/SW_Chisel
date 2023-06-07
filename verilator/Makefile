@@ -40,11 +40,11 @@ VERILATOR_FLAGS += -x-assign fast
 # Warn abount lint issues; may not want this on less solid designs
 VERILATOR_FLAGS += -Wall
 # Make waveforms
-VERILATOR_FLAGS += --trace
+# VERILATOR_FLAGS += --trace
 # Check SystemVerilog assertions
 VERILATOR_FLAGS += --assert
 # Generate coverage analysis
-VERILATOR_FLAGS += --coverage
+# VERILATOR_FLAGS += --coverage
 # Run Verilator in debug mode
 #VERILATOR_FLAGS += --debug
 # Add this trace to get a backtrace in gdb
@@ -69,7 +69,7 @@ run:
 # To compile, we can either
 # 1. Pass --build to Verilator by editing VERILATOR_FLAGS above.
 # 2. Or, run the make rules Verilator does:
-#	$(MAKE) -j -C obj_dir -f VSW.mk
+#	$(MAKE) -j -C obj_dir -f VSWCell.mk
 # 3. Or, call a submakefile where we can override the rules ourselves:
 	$(MAKE) -j -C obj_dir -f ../Makefile_obj
 
@@ -81,7 +81,7 @@ run:
 
 	@echo
 	@echo "-- DONE --------------------"
-	@echo "To see waveforms, open logs/dump.vcd in a waveform viewer"
+	@echo Smith-Waterman C Model Test Passed!
 	@echo
 
 

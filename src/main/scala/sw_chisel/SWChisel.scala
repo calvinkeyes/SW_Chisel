@@ -161,7 +161,8 @@ class SW(p: SWParams) extends Module {
   // create and initialize arrays
   val E = RegInit(VecInit(Seq.tabulate(p.e_len)( i => ((-1*p.alpha)-((i)*p.beta)).S(p.dataSize.W) )))
   val F = RegInit(VecInit(Seq.fill(p.f_len)(0.S(p.dataSize.W))))
-  val V1 = RegInit(VecInit(Seq.tabulate(p.v_len)( i => ((-1*p.alpha)-((i-1)*p.beta)).S(p.dataSize.W))))
+  val V1 = RegInit(VecInit(Seq.tabulate(p.v_len)( i => if (i==0) 0.S(p.dataSize.W) 
+                                else ((-1*p.alpha)-((i-1)*p.beta)).S(p.dataSize.W))))
   V1(0) := 0.S
   val V2 = RegInit(VecInit(Seq.fill(p.v_len)(0.S(p.dataSize.W))))
   val start_reg = RegInit(VecInit(Seq.fill(p.q_len)(false.B)))
@@ -246,16 +247,15 @@ class SW(p: SWParams) extends Module {
   }
 
 }
-
-
+ 
 
 object SWDriver extends App {
-  val debug = false
+  val debug = true
   val alpha = 2
   val beta = 1
   val similarity = 2
-  val r_len = 750
-  val q_len = 750
+  val r_len = 10
+  val q_len = 6
   val dataSize = 16 //log2Ceil(q_len*2) + 1
   val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
   (new ChiselStage).emitVerilog(new SW(p), args)
