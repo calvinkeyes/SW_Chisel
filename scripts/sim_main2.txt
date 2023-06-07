@@ -1,0 +1,33 @@
+    SW->io_start = 0;
+
+    // Start in reset state
+    SW->eval();
+    // step the clock
+    SW->clock = !SW->clock;	
+    SW->eval();
+    SW->clock = !SW->clock;
+    contextp->timeInc(1);
+    
+    // start the device
+    SW->reset = 0;
+    SW->io_start = 1;
+    SW->eval();
+
+    // step the clock
+    SW->clock = !SW->clock;	
+    SW->eval();
+    SW->clock = !SW->clock;
+    contextp->timeInc(1);
+    SW->eval();
+    SW->clock = !SW->clock;
+    SW->eval();
+    SW->clock = !SW->clock;
+    contextp->timeInc(1);
+
+    // Check ramp up scoring
+	for (int j = 1; j < (READ_LENGTH); j++) {
+	
+        // SW->eval();
+        for (int i = 0; i < j; i++){
+            //printf("%d ",soln[i+1][j-i].v);
+            switch(i+1){                
