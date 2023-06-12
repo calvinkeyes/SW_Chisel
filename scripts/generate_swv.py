@@ -18,7 +18,8 @@ f.close()
 
 # write new contents to file
 f = open("verilator/SW.v", "w")
-f.write("/* verilator lint_off DECLFILENAME */\n\n")
+f.write("/* verilator lint_off DECLFILENAME */\n")
+f.write("/* verilator lint_off UNUSEDSIGNAL */\n\n")
 f.write(sw)
 f.close()
 

@@ -40,16 +40,16 @@
 #define MATCH 2
 #define ALPHA 2
 #define BETA 1
-#define REF_LENGTH 11
-#define READ_LENGTH 7
+#define REF_LENGTH 18
+#define READ_LENGTH 11
 #define SW_HIST 2
 
-typedef char base;
+typedef short int base;
 #ifdef BIT_ACCURATE
 #include "ap_int.h"
 typedef ap_uint<2> hw_base;
 #else
-typedef char hw_base;
+typedef short int hw_base;
 #endif
 
 
@@ -108,7 +108,7 @@ struct toSwBase{
 
 
 struct score{
-	char v, e, f;
+	short int v, e, f;
 };
 
 struct sw_ref{
@@ -117,7 +117,7 @@ struct sw_ref{
 };
 
 template<std::size_t LEN>
-void print_top(char const& matid, std::array<char, LEN> const& top){
+void print_top(short int const& matid, std::array<short int, LEN> const& top){
 	printf("%c", matid);
 	for (auto t : top) {
 		printf("%3c ", t);
@@ -126,7 +126,7 @@ void print_top(char const& matid, std::array<char, LEN> const& top){
 }
 
 template<std::size_t LEN>
-void print_top(char const& matid, std::array<sw_ref, LEN> const& top){
+void print_top(short int const& matid, std::array<sw_ref, LEN> const& top){
 	printf("%c", matid);
 	for (auto t : top) {
 		printf("%3c ", to_sw_base(t.b));
@@ -135,7 +135,7 @@ void print_top(char const& matid, std::array<sw_ref, LEN> const& top){
 }
 
 template<std::size_t LEN>
-void print_row(char const& matid, base const& lbase, std::array<score, LEN> const& row){
+void print_row(short int const& matid, base const& lbase, std::array<score, LEN> const& row){
 	printf("%c", lbase);
 	for (auto r : row) {
 		switch(matid) {
@@ -157,7 +157,7 @@ void print_row(char const& matid, base const& lbase, std::array<score, LEN> cons
 
 
 template<std::size_t SW, std::size_t W, std::size_t H, typename T>
-void print_mat(char matid, std::array<base, H> left, std::array<T, W> top, matrix<score, SW, H> smatrix){
+void print_mat(short int matid, std::array<base, H> left, std::array<T, W> top, matrix<score, SW, H> smatrix){
 	print_top(matid, top);
 	for(int j = 0; j < H; ++j){
 		print_row(matid, left[j], smatrix[j]);

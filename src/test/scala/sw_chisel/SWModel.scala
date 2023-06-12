@@ -6,10 +6,6 @@ class SWModel(query: String, ref: String, p: SWParams) {
     // need to define 2D array based on 
     val cell: SWCellModel = new SWCellModel(p)
 
-    // save query and ref strings
-    // val q: String = query
-    // val r: String = ref
-
     // define 2D arrays
     val v: Array[Array[Int]] = Array.ofDim[Int](p.q_len+1, p.r_len+1)
     val e: Array[Array[Int]] = Array.ofDim[Int](p.q_len+1, p.r_len+1)

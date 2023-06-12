@@ -35,8 +35,6 @@ class SWCellModelTester extends AnyFlatSpec with ChiselScalatestTester {
                 pf = "passed"
             else 
                 pf = "failed"
-            // print("test "+i+" out of "+num_tests+": "+pf+"\n")
-            // print("\texpected: "+res(i)+" computed:"+result+"\n")
         }
     }
 

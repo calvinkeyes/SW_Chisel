@@ -8,7 +8,6 @@ class SWCellModel(p: SWParams) {
 
         // generate values for e, f, and v
         val e_o = (ve_i - p.alpha).max(e_i - p.beta)
-        // print("ve_i: "+ve_i+" p.alpha: "+p.alpha+"\n")
         val f_o = (vf_i - p.alpha).max(f_i - p.beta)
         val ef_temp = (e_o).max(f_o)
         val v_temp = if (q==r) vv_i + p.similarity else vv_i - p.similarity

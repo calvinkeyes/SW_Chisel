@@ -23,7 +23,7 @@ driver = """
   val similarity = 2
   val r_len = """+str(r_len)+"""
   val q_len = """+str(q_len)+"""
-  val dataSize = 16 //log2Ceil(q_len*2) + 1
+  val dataSize = 16 
   val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
   (new ChiselStage).emitVerilog(new SW(p), args)
 }

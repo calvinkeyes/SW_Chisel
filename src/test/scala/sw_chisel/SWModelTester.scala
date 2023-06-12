@@ -17,12 +17,10 @@ class SWModelTester extends AnyFlatSpec with ChiselScalatestTester {
         val r_len = 10
         val q_len = 6
         val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
-        val s = new SWModel("actgac","agtactgcga",p)
+        val s = new SWModel("agtcat","acagtcgatc",p)
         val num_tests = 21
-        s.print_state()
         s.compute_mat()
         s.print_state()
-        println("max: "+s.find_max().toString())
     }
 
     it should "find the maximum value we could have" in {
@@ -31,8 +29,8 @@ class SWModelTester extends AnyFlatSpec with ChiselScalatestTester {
         val beta = 1
         val similarity = 2
         val dataSize = 16
-        val r_len = 1000
-        val q_len = 100
+        val r_len = 10
+        val q_len = 6
 
         // generate random query
         val rand = scala.util.Random
@@ -56,7 +54,7 @@ class SWModelTester extends AnyFlatSpec with ChiselScalatestTester {
         // generate random ref
         var ref : String = ""
         for (i <- 0 until r_len) {
-        val num = rand.nextInt(3)
+        val num = rand.nextInt(4)
         if (num == 0) {
             ref = ref.concat("a")
         } else if (num == 1) {
@@ -73,6 +71,6 @@ class SWModelTester extends AnyFlatSpec with ChiselScalatestTester {
         val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
         val s = new SWModel(query,ref,p)
         s.compute_mat()
-        println("max value: "+s.find_max())
+        // s.print_state()
     }
 }

@@ -117,12 +117,6 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
         }
       }
 
-      // print out all of the values from the 
-      println()
-      println()
-      println("testing SWChisel")
-      println()
-
       dut.clock.step()
       dut.io.start.poke(true.B)
       dut.clock.step()
@@ -132,43 +126,33 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
 
       // ramp-up testing
       for (j <- 1 to q_len) {
-        // print out the cycle
-        println(s"cycle $count")
+
         // check the ramp up registers
         for (i <- 0 until j) {
           dut.io.v1_out.get(i+1).expect(s.v(i+1)(j-i))
           dut.io.e_out.get(i).expect(s.e(i+1)(j-i))
           dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
         }
-        // println()
         count = count + 1
         dut.clock.step()
       }
 
       // Test when pipeline is full
       for (j <- q_len+1 to r_len) {
-        // print out the cycle
-        println(s"cycle $count")
-        // println()
 
         // check pipeline full registers
         for (i <- 0 until q_len) {
-          // println(dut.io.v1_out(i+1).peek())
-          // println(s.v(i+1)(j-i))
           dut.io.v1_out.get(i+1).expect(s.v(i+1)(j-i))
           dut.io.e_out.get(i).expect(s.e(i+1)(j-i))
           dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
         }
 
-        // println()
         count = count + 1
         dut.clock.step()
       }
 
       // Test when emptying pipeline
       for (j <- r_len+1 until q_len+r_len) {
-        // print out cycle number
-        println(s"cycle $count")
 
         // check ramp down registers
         var k = 0
@@ -178,16 +162,11 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
           dut.io.f_out.get(q_len-i+1).expect(s.f(q_len-i+1)(r_len-k))
           k = k + 1
         }
-        // println()
         count = count + 1
         dut.clock.step()
 
       }
-      println(s"cycle $count")
       dut.io.done.expect(true)
-      println()
-      println("TEST PASSED!")
-      println(s"Result: ${dut.io.result.peek()}")
     }
   }
 
@@ -198,7 +177,7 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
     val similarity = 2
     val r_len = 10
     val q_len = 6
-    val dataSize =  ceil(log(q_len*2)/log(2)).toInt + 1 //log2Ceil(q_len*2) + 1
+    val dataSize =  16//ceil(log(q_len*2)/log(2)).toInt + 1 //log2Ceil(q_len*2) + 1
 
     // generate random query
     val rand = scala.util.Random
@@ -235,8 +214,6 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       }
     }
 
-    // println(query)
-    // println(ref)
     val p = new SWParams(debug,alpha,beta,similarity,dataSize,r_len,q_len)
     val s = new SWModel(query, ref, p)
     test(new SW(p)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => 
@@ -270,10 +247,6 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
       }
 
       // print out all of the values from the 
-      println()
-      println()
-      println("testing SWChisel")
-      println()
 
       dut.clock.step()
       dut.io.start.poke(true.B)
@@ -289,7 +262,6 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
           dut.io.e_out.get(i).expect(s.e(i+1)(j-i))
           dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
         }
-        // println()
         count = count + 1
         dut.clock.step()
       }
@@ -304,7 +276,6 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
           dut.io.f_out.get(i+1).expect(s.f(i+1)(j-i))
         }
 
-        // println()
         count = count + 1
         dut.clock.step()
       }
@@ -318,16 +289,12 @@ class SWChiselTester extends AnyFlatSpec with ChiselScalatestTester {
           dut.io.f_out.get(q_len-i+1).expect(s.f(q_len-i+1)(r_len-k))
           k = k + 1
         }
-        // println()
         count = count + 1
         dut.clock.step()
 
       }
-      println(s"cycle $count")
       dut.io.done.expect(true)
-      println()
-      println("TEST PASSED!")
-      println(s"Result: ${dut.io.result.peek()}")
+      println("Smith-Waterman Scala Model Test Passed!")
     }
   }
 

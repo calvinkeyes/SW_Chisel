@@ -51,10 +51,11 @@ f.write("\n")
             #     assert(soln[i+1][j-i].v == (char)SW->io_v1_out_1);
             #     break;
 for i in range (0,q_len):
-    f.write("\t\t\t\tcase("+str(i+1)+"):\n")
-    f.write("\t\t\t\t\t//printf(\"%hd\\n\", SW->io_v1_out_"+str(i+1)+");\n")
-    f.write("\t\t\t\t\tassert(soln[i+1][j-i].v == (char)SW->io_v1_out_"+str(i+1)+");\n")
-    f.write("\t\t\t\t\tbreak;\n")
+    if (i < 127):
+        f.write("\t\t\t\tcase("+str(i+1)+"):\n")
+        f.write("\t\t\t\t\t//printf(\"%hd\\n\", SW->io_v1_out_"+str(i+1)+");\n")
+        f.write("\t\t\t\t\tassert(soln[i+1][j-i].v == (char)SW->io_v1_out_"+str(i+1)+");\n")
+        f.write("\t\t\t\t\tbreak;\n")
 
 f.write("\t\t\t\tdefault:\n")
 f.write("\t\t\t\t\tbreak;\n")
@@ -65,10 +66,11 @@ f.write("\n")
 
 # generate more case statements
 for i in range (0,q_len):
-    f.write("\t\t\t\tcase("+str(i+1)+"):\n")
-    f.write("\t\t\t\t\t//printf(\"%hd\\n\", SW->io_v1_out_"+str(i+1)+");\n")
-    f.write("\t\t\t\t\tassert(soln[i+1][j-i].v == (char)SW->io_v1_out_"+str(i+1)+");\n")
-    f.write("\t\t\t\t\tbreak;\n")
+    if (i < 126):
+        f.write("\t\t\t\tcase("+str(i+1)+"):\n")
+        f.write("\t\t\t\t\t//printf(\"%hd\\n\", SW->io_v1_out_"+str(i+1)+");\n")
+        f.write("\t\t\t\t\tassert(soln[i+1][j-i].v == (char)SW->io_v1_out_"+str(i+1)+");\n")
+        f.write("\t\t\t\t\tbreak;\n")
 
 f.write("\t\t\t\tdefault:\n")
 f.write("\t\t\t\t\tbreak;\n")

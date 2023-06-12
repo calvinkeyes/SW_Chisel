@@ -43,14 +43,14 @@ struct SmithWatermanUnit{
 			sw_ref const& ref,
 			std::array<std::array<score, SW_HIST>, IDX> const& smatrix) const{
 		score ret;
-		char sigma;
+		short int sigma;
 		if(ref.last){
 #ifdef BIT_ACCURATE
 			ret = {(ap_int<hops::clog2(IDX)+1>)-(IDX),
 			       (ap_int<hops::clog2(IDX)+1>)-(IDX),
 			       (ap_int<hops::clog2(IDX)+1>)-(IDX)};
 #else
-			ret = {(char)-(IDX), (char)-(IDX), (char)-(IDX)};
+			ret = {(short int)-(IDX), (short int)-(IDX), (short int)-(IDX)};
 #endif
 		}else{
 			sigma = (read == ref.b)? MATCH: -MATCH;
@@ -58,7 +58,7 @@ struct SmithWatermanUnit{
 					smatrix[0][0].e - BETA);
 			ret.f = std::max(smatrix[1][0].v - ALPHA,
 					smatrix[1][0].f - BETA);
-			ret.v = std::max((char)(smatrix[1][1].v + sigma),
+			ret.v = std::max((short int)(smatrix[1][1].v + sigma),
 					std::max(ret.e, ret.f));
 		}
 		return ret;
@@ -69,19 +69,19 @@ struct SmithWatermanUnit{
 			sw_ref const& ref,
 			std::array<std::array<score, SW_HIST>, READ_LENGTH> const& smatrix) const{
 		score ret;
-		char sigma;
+		short int sigma;
 		if(IDX == 0){
 			ret = {0,0,0};
 		} else {
 			if(ref.last){
-				ret = {(char)-(IDX+1), (char)-(IDX+1), (char)-(IDX+1)};
+				ret = {(short int)-(IDX+1), (short int)-(IDX+1), (short int)-(IDX+1)};
 			}else{
 				sigma = (read == ref.b)? MATCH: -MATCH;
 				ret.e = std::max(smatrix[IDX + 0][0].v - ALPHA,
 						smatrix[IDX + 0][0].e - BETA);
 				ret.f = std::max(smatrix[IDX - 1][0].v - ALPHA,
 						smatrix[IDX - 1][0].f - BETA);
-				ret.v = std::max((char)(smatrix[IDX - 1][1].v + sigma),
+				ret.v = std::max((short int)(smatrix[IDX - 1][1].v + sigma),
 						std::max(ret.e, ret.f));
 			}
 		}
@@ -91,7 +91,7 @@ struct SmithWatermanUnit{
 } sw_op;
 
 // convert base to integer
-int send_to_hw(char base) {
+int send_to_hw(short int base) {
     switch(base){
 		case 'a':
 			return 0;
@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
     int err;
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_int_distribution<unsigned char> distribution(0, 1<<(8*sizeof(unsigned char) - 1));
+	std::uniform_int_distribution<unsigned short int> distribution(0, 1<<(8*sizeof(unsigned short int) - 1));
 	
 	std::array<base, READ_LENGTH> read;
 
@@ -197,15 +197,15 @@ int main(int argc, char** argv) {
 				soln[sr_idx][cyc] = {0,0,0};
 			} else{
 				if(soln_top[sr_idx].last){
-					soln[sr_idx][sr_cyc] = {(char)-(sr_idx+1), (char)-(sr_idx+1), (char)-(sr_idx+1)};
+					soln[sr_idx][sr_cyc] = {(short int)-(sr_idx+1), (short int)-(sr_idx+1), (short int)-(sr_idx+1)};
 				} else {
 					score temp;
-					char sigma = (to_hw_base(read[sr_idx]) == soln_top[sr_idx].b)? 2: -2;
+					short int sigma = (to_hw_base(read[sr_idx]) == soln_top[sr_idx].b)? 2: -2;
 					temp.e = std::max(soln[sr_idx][sr_cyc-1].v - ALPHA, 
 							soln[sr_idx][sr_cyc-1].e - BETA);
 					temp.f = std::max(soln[sr_idx-1][sr_cyc].v - ALPHA, 
 							soln[sr_idx-1][sr_cyc].f - BETA);
-					temp.v = std::max((char)(soln[sr_idx-1][sr_cyc-1].v + sigma), 
+					temp.v = std::max((short int)(soln[sr_idx-1][sr_cyc-1].v + sigma), 
 							std::max(temp.e, temp.f));
 					soln[sr_idx][sr_cyc] = temp;
 				}
@@ -223,6 +223,10 @@ int main(int argc, char** argv) {
 	SW->io_q_3_b = send_to_hw(read[4]);
 	SW->io_q_4_b = send_to_hw(read[5]);
 	SW->io_q_5_b = send_to_hw(read[6]);
+	SW->io_q_6_b = send_to_hw(read[7]);
+	SW->io_q_7_b = send_to_hw(read[8]);
+	SW->io_q_8_b = send_to_hw(read[9]);
+	SW->io_q_9_b = send_to_hw(read[10]);
 
 	SW->io_r_0_b = send_to_hw(ref[1]);
 	SW->io_r_1_b = send_to_hw(ref[2]);
@@ -234,6 +238,13 @@ int main(int argc, char** argv) {
 	SW->io_r_7_b = send_to_hw(ref[8]);
 	SW->io_r_8_b = send_to_hw(ref[9]);
 	SW->io_r_9_b = send_to_hw(ref[10]);
+	SW->io_r_10_b = send_to_hw(ref[11]);
+	SW->io_r_11_b = send_to_hw(ref[12]);
+	SW->io_r_12_b = send_to_hw(ref[13]);
+	SW->io_r_13_b = send_to_hw(ref[14]);
+	SW->io_r_14_b = send_to_hw(ref[15]);
+	SW->io_r_15_b = send_to_hw(ref[16]);
+	SW->io_r_16_b = send_to_hw(ref[17]);
 
     SW->io_start = 0;
 
@@ -292,6 +303,22 @@ int main(int argc, char** argv) {
 					//printf("%hd\n", SW->io_v1_out_6);
 					assert(soln[i+1][j-i].v == (char)SW->io_v1_out_6);
 					break;
+				case(7):
+					//printf("%hd\n", SW->io_v1_out_7);
+					assert(soln[i+1][j-i].v == (char)SW->io_v1_out_7);
+					break;
+				case(8):
+					//printf("%hd\n", SW->io_v1_out_8);
+					assert(soln[i+1][j-i].v == (char)SW->io_v1_out_8);
+					break;
+				case(9):
+					//printf("%hd\n", SW->io_v1_out_9);
+					assert(soln[i+1][j-i].v == (char)SW->io_v1_out_9);
+					break;
+				case(10):
+					//printf("%hd\n", SW->io_v1_out_10);
+					assert(soln[i+1][j-i].v == (char)SW->io_v1_out_10);
+					break;
 				default:
 					break;
             }
@@ -336,6 +363,22 @@ int main(int argc, char** argv) {
 				case(6):
 					//printf("%hd\n", SW->io_v1_out_6);
 					assert(soln[i+1][j-i].v == (char)SW->io_v1_out_6);
+					break;
+				case(7):
+					//printf("%hd\n", SW->io_v1_out_7);
+					assert(soln[i+1][j-i].v == (char)SW->io_v1_out_7);
+					break;
+				case(8):
+					//printf("%hd\n", SW->io_v1_out_8);
+					assert(soln[i+1][j-i].v == (char)SW->io_v1_out_8);
+					break;
+				case(9):
+					//printf("%hd\n", SW->io_v1_out_9);
+					assert(soln[i+1][j-i].v == (char)SW->io_v1_out_9);
+					break;
+				case(10):
+					//printf("%hd\n", SW->io_v1_out_10);
+					assert(soln[i+1][j-i].v == (char)SW->io_v1_out_10);
 					break;
 				default:
 					break;
